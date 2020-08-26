@@ -16,5 +16,4 @@ nominvalue
 nocycle
 nocache;
 
-select * from jdbc_tbl_memo;
 
