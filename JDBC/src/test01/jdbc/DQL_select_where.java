@@ -67,12 +67,18 @@ public class DQL_select_where {
 					System.out.println(menu);
 					System.out.print("선택번호 : ");
 					menuNo = sc.nextLine();
+					
+					String colName = "";		// where 절에 들어올 컬럼명
+					
 					switch (menuNo) {
 						case "1":
+							colName = "no";
 							break;
 						case "2":
+							colName = "name";
 							break;
 						case "3":
+							colName = "msg";
 							break;
 						case "4":
 							break;
@@ -83,6 +89,50 @@ public class DQL_select_where {
 					if ("1".equals(menuNo) || "2".equals(menuNo) || "3".equals(menuNo)) {
 						System.out.println("검색어 : ");
 						String search = sc.nextLine();
+						
+						sql = " select no, name, msg, to_char(writeday, 'yyyy-mm-dd hh24:mi:ss') as writeday "								// 쿼리문은 앞뒤로 공백 주기 (에러예방)
+								+ " from jdbc_tbl_memo ";
+						
+						if (!"3".equals(menuNo)) {
+							sql += " where " + colName +  " = ? ";
+						} else {
+							sql += " where " + colName + " like '%'|| ? ||'%' ";
+						}
+						
+						sql += " order by no desc ";
+						
+						ps = conn.prepareStatement(sql);
+						
+						ps.setString(1, search);
+						
+						rs = ps.executeQuery();
+						
+						System.out.println("--------------------------------------------------------");
+						System.out.println("글번호\t글쓴이\t글내용\t작성일자");
+						System.out.println("--------------------------------------------------------");
+						
+						// stringbuilder 초기화
+						sb.delete(0, sb.length());
+						// or
+						sb.setLength(0);
+						
+						
+						while (rs.next()) {
+							
+							int no = rs.getInt(1);
+							String name = rs.getString(2);
+							String msg = rs.getString(3);
+							String writeday = rs.getString(4);
+							
+							sb.append(no);
+							sb.append("\t" + name);
+							sb.append("\t" + msg);
+							sb.append("\t" + writeday);
+							sb.append("\n");
+							
+						}
+						System.out.println(sb.toString());
+
 					}
 					
 				} while (!("4".equals(menuNo)));
