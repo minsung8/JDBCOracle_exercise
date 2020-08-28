@@ -1,4 +1,4 @@
-package test02.member;
+package test06.board;
 
 import java.util.Map;
 
@@ -9,6 +9,4 @@ public interface InterMemberDAO {
 	
 	// 로그인 처리 메소드
 	MemberDTO login(Map<String, String> paraMap);
-	
-	
 }

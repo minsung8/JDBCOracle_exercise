@@ -1,14 +1,15 @@
-package test02.member;
+package test06.board;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
-public class MemberCtrl{
+import test05.singleton.dbconnection.MyDBConnection;
+
+public class TotalController {
 	
-	MemberDAO mdao = new MemberDAO();
-
-	// 시작메뉴
+	// DAO(Data Access Object) => DB 연결하여 관련된 업무(DML, DDL, DQL)를 처리해주는 객체
+	InterMemberDAO mdao = new MemberDAO();
+	InterBoardDAO bdao = new BoardDAO();
+	
 	public void menu_Start(Scanner sc) {
 		String sChoice = null;
 		MemberDTO member = null;
@@ -34,8 +35,8 @@ public class MemberCtrl{
 					if (member == null) member = login(sc);		// 로그인 시도하기
 					else member = null;
 					break;
-				case "3":
-					
+				case "3":	// 프로그램 종료  => Connection 객체 자원반납
+					appExit();
 					break;
 	
 				default:
@@ -47,9 +48,8 @@ public class MemberCtrl{
 		} while (!("3".equals(sChoice))); 
 		
 	}
-
-
-	// 회원가입
+	
+	
 	private void memberRegister(Scanner sc) {
 
 		System.out.println("\n>>> --- 회원가입 --- <<<");
@@ -108,4 +108,12 @@ public class MemberCtrl{
 		return member;
 	}
 	
+	// Connection 자원 반납
+	private void appExit() {
+		MyDBConnection.closeConnection();
+	}
+
+	
+	
+
 }

@@ -1,6 +1,4 @@
-package test02.member;
-
-// DTO(Data Transfer Object)는 table의 행을 의미 
+package test06.board;
 
 public class MemberDTO {
 

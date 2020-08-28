@@ -1,4 +1,4 @@
-package test02.member;
+package test06.board;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,8 +8,9 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Map;
 
+import test05.singleton.dbconnection.MyDBConnection;
 
-public class MemberDAO implements InterMemberDAO{
+public class MemberDAO implements InterMemberDAO {
 
 	Connection conn = null;
 	PreparedStatement ps = null;
@@ -21,22 +22,20 @@ public class MemberDAO implements InterMemberDAO{
 		try {
 		if(rs != null) rs.close();
 		if(ps != null) ps.close();
-		if(conn != null) conn.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	} 
 	
-	// DB에 회원가입 메소드 
+// DB에 회원가입 메소드 
 	@Override
 	public int memberRegister(MemberDTO member) {
 		
 		int result = 0;
 		
 		try {
-			Class.forName("oracle.jdbc.driver.OracleDriver");
 			
-			conn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:xe", "MYORAUSER", "cclass");
+			conn = MyDBConnection.getConn();
 			
 			String sql = "insert into jdbc_member(userseq, userid, passwd, name, mobile)\n"+
 					"values(userseq.nextval, ?, ?, ?, ?)";
@@ -49,9 +48,7 @@ public class MemberDAO implements InterMemberDAO{
 			
 			result = ps.executeUpdate();
 			
-		} catch (ClassNotFoundException e) {
-			System.out.println("ojdbc6.jar 파일이 없습니다.");
-		}	catch (SQLIntegrityConstraintViolationException e1) {
+		} catch (SQLIntegrityConstraintViolationException e1) {
 			System.out.println("에러메시지 : " + e1.getMessage());
 			System.out.println("에러코드번호 : " + e1.getErrorCode());
 			System.out.println(">>> 아이디가  중복되었습니다. 새로운 아이디를 입력하세요! ");
@@ -64,16 +61,16 @@ public class MemberDAO implements InterMemberDAO{
 		return result;
 	}
 
-	// 로그인 처리 메소드
+
+// 로그인 처리 메소드
 	@Override
 	public MemberDTO login(Map<String, String> paraMap) {
 		
 		MemberDTO member = null;
 		
 		try {
-			Class.forName("oracle.jdbc.driver.OracleDriver");
-			
-			conn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:xe", "MYORAUSER", "cclass");
+			conn = MyDBConnection.getConn();
+
 			
 			String sql = "select userseq, userid, passwd, name, mobile, point, to_char(registerday, 'yyyy-mm-dd') as registerday, status\n " + 
 					" from jdbc_member\n " + 
@@ -90,14 +87,11 @@ public class MemberDAO implements InterMemberDAO{
 				member.setName(rs.getString("name"));
 			}
 			
-		} catch (ClassNotFoundException e) {
-			System.out.println("ojdbc6.jar 파일이 없습니다.");
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		} finally {
 			close();
 		}
-		
 		
 		return member; 
 	}
