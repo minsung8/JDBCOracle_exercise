@@ -87,7 +87,10 @@ public class MemberDAO implements InterMemberDAO{
 			
 			if (rs.next()) {
 				member = new MemberDTO();
+				member.setUserid(rs.getString("userid"));
+				member.setPasswd(rs.getString("passwd"));
 				member.setName(rs.getString("name"));
+				member.setMobile(rs.getString("mobile"));;
 			}
 			
 		} catch (ClassNotFoundException e) {
