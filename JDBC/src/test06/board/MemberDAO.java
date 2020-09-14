@@ -67,7 +67,6 @@ public class MemberDAO implements InterMemberDAO {
 				} while (!("y".equalsIgnoreCase(yn) || "n".equalsIgnoreCase(yn)));
 		}
 
-		
 			
 		} catch (SQLIntegrityConstraintViolationException e1) {
 			System.out.println("에러메시지 : " + e1.getMessage());
@@ -118,6 +117,30 @@ public class MemberDAO implements InterMemberDAO {
 		}
 		
 		return member; 
+	}
+
+	@Override
+	public int updateMemberPoint(MemberDTO member) {
+		int result = 0;
+		
+		try {
+			
+			conn = MyDBConnection.getConn();
+			
+			String sql = " update jdbc_member set point = point + 10 \n " +
+			" where userid = ? ";
+
+			ps = conn.prepareStatement(sql);
+			ps.setString(1, member.getUserid());
+		
+			result = ps.executeUpdate();
+		} catch(Exception e) {
+			System.out.println(member.getName() + "님의 포인트는 현재 20이라서 30으로 증가가 불가합니다.");
+		} finally {
+			close();
+		}
+		
+		return result;
 	}
 	
 	

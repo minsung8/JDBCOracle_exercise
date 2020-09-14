@@ -10,10 +10,7 @@ public class Main {
 		TotalController ctrl = new TotalController();
 		Scanner sc = new Scanner(System.in);
 		
-		ctrl.menu_Start(sc);
-		
-
-		
+		ctrl.menu_Start(sc);	
 		
 		sc.close();
 		System.out.println("~~~ 프로그램 종료 ~~~");

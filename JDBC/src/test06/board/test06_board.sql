@@ -1,5 +1,5 @@
 show user;
-
+select * from jdbc_member;
 drop table jdbc_member purge;
 create table jdbc_member (userseq number not null -- 회원번호
 ,userid varchar2(30) not null -- 회원아이디 ,passwd varchar2(30) not null -- 회원암호
@@ -61,4 +61,8 @@ create table jdbc_comment (commentno number not null -- 댓글번호
 
 create sequence seq_comment start with 1 increment by 1 nomaxvalue nominvalue nocycle nocache;
 
-delete from jdbc_member;
+delete from jdbc_board;
+
+select * from jdbc_board;
+select * from jdbc_member;
+

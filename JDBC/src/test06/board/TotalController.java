@@ -1,5 +1,6 @@
 package test06.board;
 
+import java.sql.Connection;
 import java.util.*;
 
 import test05.singleton.dbconnection.MyDBConnection;
@@ -124,7 +125,7 @@ public class TotalController {
 					);
 			System.out.print("메뉴번호 선택 : ");
 			menuNo = sc.nextLine();
-			
+
 			switch (menuNo) {
 			case "1":			// 글목록보기
 				
@@ -133,7 +134,10 @@ public class TotalController {
 				
 				break;
 			case "3":			// 글쓰기
-				
+				int n = write(loginMember, sc);
+				if (n == 1) System.out.println(">> 글쓰기 성공!! <<");
+				else if (n == -1) System.out.println(">> 글쓰기를 취소하셨습니다!! <<");
+				else System.out.println(">> 장애가 발생하여 글쓰기가 실패되었습니다!! <<");
 				break;
 			case "4":			// 댓글쓰기
 				
@@ -171,6 +175,67 @@ public class TotalController {
 		
 	}
 	
+	private int write(MemberDTO loginMember, Scanner sc) {
+		
+		int result = 0;
+		
+		System.out.println("\n>>> 글쓰기 <<<");
+		System.out.println("1. 작성자명 : " + loginMember.getName());
+		
+		System.out.print("2. 글제목 : ");
+		String subject = sc.nextLine();
+		
+		System.out.print("3. 글내용 : ");
+		String contents = sc.nextLine();
+		
+		System.out.print("4. 글암호 : ");
+		String boardpasswd = sc.nextLine();
+		
+		BoardDTO bdto = new BoardDTO();
+		bdto.setFk_userid(loginMember.getUserid());
+		bdto.setSubject(subject);
+		bdto.setContents(contents);
+		bdto.setBoardpass(boardpasswd);
+		
+		int n1 = bdao.write(bdto);
+		int n2 = mdao.updateMemberPoint(loginMember);		// 회원테이블에서 글을 작성한 회원의 point를 10 증가하는 update
+
+		Connection conn = MyDBConnection.getConn();
+		
+		if (n1 == 1 && n2 == 1) {
+			do {
+				System.out.println(">> 정말로 글쓰기를 하시겠습니까?[Y/N] => ");
+				String yn = sc.nextLine();
+				
+				try {
+					if ("y".equalsIgnoreCase(yn)) {
+						conn.commit();
+						result = 1;
+						break;
+					} else if ("n".equalsIgnoreCase(yn)) {
+						conn.rollback();
+						result = -1;		// 사용자가 글쓰기를 취소한 경우
+						break;
+					} else {
+						System.out.println(">> Y 또는 N만 입력하세요!! \n");
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+			} while (true);
+		} else {
+			try {
+				conn.rollback();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return result;
+
+	}
+
 	// Connection 자원 반납
 	private void appExit() {
 		MyDBConnection.closeConnection();
