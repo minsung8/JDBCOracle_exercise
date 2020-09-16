@@ -16,7 +16,6 @@ create table jdbc_member (userseq number not null -- 회원번호
 );
 
 drop sequence userseq;
-
 -- sequence 생성
 create sequence userseq
 start with 1
@@ -66,3 +65,67 @@ delete from jdbc_board;
 select * from jdbc_board;
 select * from jdbc_member;
 
+select B.boardno
+    , case when length(B.subject) > 10 then substr(B.subject, 1, 10) || '..' else B.subject end
+    , M.name, to_char(B.writeday, 'yyyy-mm-dd hh24:mi:ss') as writeday, B.viewcount
+from jdbc_board B join jdbc_member M
+on B.fk_userid = M.userid
+order by 1 desc;
+
+
+String sql = "select B.boardno\n"+
+"    , case when length(B.subject) > 10 then substr(B.subject, 1, 10) || '..' else B.subject end\n"+
+"    , M.name, to_char(B.writeday, 'yyyy-mm-dd hh24:mi:ss') as writeday, B.viewcount\n"+
+"from jdbc_board B join jdbc_member M\n"+
+"on B.fk_userid = M.userid\n"+
+"order by 1 desc";
+
+select *
+from jdbc_board
+where boardno = 12;
+
+String sql = "select contents, fk_userid\n"+
+"from jdbc_board\n"+
+"where boardno = ?;";
+
+String sql = "select contents, fk_user  id from jdbc_board where boardno = 12;";
+
+select * from jdbc_comment;
+
+
+select *
+from jdbc_comment C right join jdbc_board B
+on C.fk_boardno = B.boardno;
+
+
+select B.boardno, 
+ B.subject, 
+ M.name, to_char(B.writeday, 'yyyy-mm-dd hh24:mi:ss') as writeday, B.viewcount
+from jdbc_board B join jdbc_member M
+on B.fk_userid = M.userid
+order by 1 desc;
+
+String sql = "select B.boardno, B.subject, \n"+
+"M.name, to_char(B.writeday, 'yyyy-mm-dd hh24:mi:ss') as writeday\n"+
+", B.viewcount, nvl(C.commentcount, 0)\n"+
+"from jdbc_board B join jdbc_member M\n"+
+"on B.fk_userid = M.userid\n"+
+"left join\n"+
+"(\n"+
+"select fk_boardno, count(*) as commentcount\n"+
+"from jdbc_comment\n"+
+"group by fk_boardno\n"+
+") C\n"+
+"on B.boardno = C.fk_boardno";
+
+select * 
+from jdbc_comment
+where fk_boardno = 7;
+
+String sql = "select C.contents, M.name, to_char(C.writeday, 'yyyy-mm-dd hh24:mi:ss') as writeday\n"+
+"from jdbc_comment C join jdbc_member M\n"+
+"on C.fk_userid = M.userid\n"+
+"where C.fk_boardno = 1";
+
+select * from jdbc_board
+where boardno = 7;

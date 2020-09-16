@@ -128,10 +128,10 @@ public class TotalController {
 
 			switch (menuNo) {
 			case "1":			// 글목록보기
-				
+				boardList();
 				break;
 			case "2":			// 글내용보기
-				
+				viewContents(loginMember, sc);
 				break;
 			case "3":			// 글쓰기
 				int n = write(loginMember, sc);
@@ -140,10 +140,21 @@ public class TotalController {
 				else System.out.println(">> 장애가 발생하여 글쓰기가 실패되었습니다!! <<");
 				break;
 			case "4":			// 댓글쓰기
-				
+				n = writeComment(loginMember, sc);
+				if (n == 1) System.out.println(">> 댓글쓰기 성공!! <<");
+				else System.out.println(">> 댓글쓰기 실패!! <<");
 				break;
 			case "5":			// 글수정하기
-				
+				n = updateBoard(loginMember, sc);
+				if (n==0) {
+					System.out.println(">> 수정할 글번호가 글목록에 존재하지 않습니다. <<\n");
+				}
+				else if (n==1) System.out.println(">> 다른 사용자의 글은 수정 불가합니다! <<\n");
+				else if (n==2) System.out.println(">> 글암호가 올바르지 않습니다! <<\n");
+				else if (n==3) System.out.println(">> 글수정 실패! <<\n");
+				else if (n==4) System.out.println(">> 글수정 취소! <<\n");
+				else if (n==5) System.out.println(">> 글수정 성공! <<\n");
+
 				break;
 			case "6":			// 글삭제하기
 				
@@ -174,6 +185,168 @@ public class TotalController {
 		} while (!"9".equals(menuNo));
 		
 	}
+	
+	
+	private int updateBoard(MemberDTO loginMember, Scanner sc) {
+		
+		int result = 0;
+
+		System.out.println("\n>>> 글 수정 하기 <<<");
+		
+		System.out.println("> 수정할 글번호 : ");
+		String boardNo = sc.nextLine();
+	
+		Map<String, String> paraMap =new HashMap<String, String>();
+		paraMap.put("boardNo", boardNo);
+		
+		BoardDTO bdto = bdao.viewContents(paraMap);
+		
+		if (bdto != null) {
+			
+			if (bdto.getFk_userid().equals(loginMember.getUserid())) {
+				System.out.println("> 글암호 : ");
+				String boardPasswd = sc.nextLine();
+
+				paraMap.put("boardPasswd", boardPasswd);
+				
+				bdto = bdao.viewContents(paraMap);
+				
+				if (bdto != null) {
+					
+					System.out.println("-----------------------");
+					System.out.println("글제목 : " + bdto.getSubject());
+					System.out.println("글내용 : " + bdto.getContents());
+					System.out.println("-----------------------");
+					
+					System.out.println("> 글제목[변경하지 않으려면 엔터] : ");
+					String subject = sc.nextLine();
+					
+					if (subject != null && subject.trim().isEmpty()) {
+						subject = bdto.getSubject();
+					}
+					
+					System.out.println("> 글내용[변경하지 않으려면 엔터] : ");
+					String contents = sc.nextLine();
+					
+					if (contents != null && contents.trim().isEmpty()) {
+						contents = bdto.getContents();
+					}
+					
+					paraMap.put("subject", subject);
+					paraMap.put("contents", contents);
+					
+					int n = bdao.updateBoard(paraMap);
+					if (n == 1) {
+						result = 5;
+					}
+				} else {
+					result = 2;
+				}
+			} else {
+				result = 1;
+			}
+			
+		}
+		
+		return result;
+	}
+
+	private int writeComment(MemberDTO loginMember, Scanner sc) {
+
+		int result = 0;
+		
+		System.out.println("\n>>> 댓글쓰기 <<<");
+		System.out.println("1. 작성자명 : " + loginMember.getName());
+		System.out.println("2. 원글의 글번호 :");
+		String boardno = sc.nextLine();
+		
+		String contents = null;
+		do {
+			System.out.println("3. 댓글내용 : ");
+			contents = sc.nextLine();
+			
+			if (contents == null || contents.trim().isEmpty()) {
+				System.out.println(">> 댓글내용은 필수로 입력해야 합니다. <<");
+			} else {
+				break;
+			}
+		} while (true);
+		
+		BoardCommentDTO cmdto = new BoardCommentDTO();
+		cmdto.setFk_boardno(boardno);
+		cmdto.setFk_userid(loginMember.getUserid());
+		cmdto.setContents(contents);
+		
+		result = bdao.writeComment(cmdto);
+		
+		
+		return result;
+	}
+
+	private void viewContents(MemberDTO loginMember, Scanner sc) {
+		
+		System.out.println("\n >>> 글내용 보기 <<<");
+		System.out.print("> 글번호 : ");
+		String boardNo = sc.nextLine();
+		Map<String, String> paraMap =new HashMap<String, String>();
+		paraMap.put("boardNo", boardNo);
+		BoardDTO bdto = bdao.viewContents(paraMap);
+		
+		if(bdto != null) {
+			System.out.println("[글내용]" + bdto.getContents());
+			
+			if (!bdto.getFk_userid().equals(loginMember.getUserid())) {
+				bdao.updateViewCount(boardNo);
+				
+			}
+			
+			System.out.println("[댓글]\n--------------------------------");
+			
+			List<BoardCommentDTO> commentList = bdao.commenList(boardNo);
+			
+			if (commentList != null) {
+				System.out.println("댓글내용\t작성자\t작성일자");
+				System.out.println("---------------------------------------");
+				StringBuilder sb = new StringBuilder();
+				
+				for (BoardCommentDTO comment : commentList) {
+					sb.append(comment.commentInfo() + "\n");
+				}
+				
+				System.out.println(sb.toString());
+			}
+			else {
+				System.out.println(">> 댓글 내용 없음 <<\n");
+			}
+			
+		} else {
+			System.out.println(">> 글번호 " + boardNo + "은 글목록에 존재하지 않습니다 \n");
+		}
+
+
+	}
+
+	private void boardList() {
+		List<BoardDTO> boardList = bdao.boardList(); 
+		
+		StringBuilder sb = new StringBuilder();
+		
+		if ( boardList.size() > 0) {
+			
+			for (int i=0; i<boardList.size(); i++) {
+				sb.append(boardList.get(i).listInfo() + "\n");
+			}
+			
+			System.out.println("\n---------------------------[게시글 목록]-------------");
+			System.out.println("글번호\t글제목\t\t작성자\t작성일자\t조회수");
+			System.out.println("----------------------------------------------------");
+			System.out.println(sb.toString());
+			
+		} else {
+			System.out.println(">>> 글목록이 없습니다 <<<\n");
+		}
+	}
+
 	
 	private int write(MemberDTO loginMember, Scanner sc) {
 		

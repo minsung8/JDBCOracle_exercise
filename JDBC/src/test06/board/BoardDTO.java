@@ -10,6 +10,10 @@ public class BoardDTO {
 	private int viewcount;
 	private String boardpass;
 	
+	private MemberDTO member;
+	
+	private int commentcnt;
+	
 	public int getBoardno() {
 		return boardno;
 	}
@@ -51,6 +55,28 @@ public class BoardDTO {
 	}
 	public void setBoardpass(String boardpass) {
 		this.boardpass = boardpass;
+	}
+	public MemberDTO getMember() {
+		return member;
+	}
+	public void setMember(MemberDTO member) {
+		this.member = member;
+	}
+	
+	public String listInfo() {
+		String listInfo;
+		if (commentcnt != 0) {
+			listInfo = boardno + "\t" + subject + "["+ commentcnt +"]\t" + member.getName() + "\t" + writeday + "\t" + viewcount + "\t";
+		} else {
+			listInfo = boardno + "\t" + subject + "\t" + member.getName() + "\t" + writeday + "\t" + viewcount + "\t";
+		}
+		return listInfo;
+	}
+	public int getCommentcnt() {
+		return commentcnt;
+	}
+	public void setCommentcnt(int commentcnt) {
+		this.commentcnt = commentcnt;
 	}
 	
 	
