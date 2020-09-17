@@ -1,8 +1,11 @@
 package test06.board;
 
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
+import my.util.MyUtil;
 import test05.singleton.dbconnection.MyDBConnection;
 
 public class TotalController {
@@ -157,13 +160,13 @@ public class TotalController {
 
 				break;
 			case "6":			// 글삭제하기
-				
+				n = deleteBoard(loginMember, sc);
 				break;
 			case "7":			// 최근1주일간 일자별 게시글 작성건수
-				
+				weekcnt();
 				break;
 			case "8":			// 이번달 일자별 게시글 작성건수
-				
+				monthcnt();
 				break;
 			case "9":			// 나가기
 				
@@ -187,6 +190,114 @@ public class TotalController {
 	}
 	
 	
+	private void monthcnt() {
+
+		Calendar currentDate = Calendar.getInstance();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년 MM월");
+		
+		String currentMonth = dateFormat.format(currentDate.getTime());
+		
+		System.out.println(">>> ["+ currentMonth +" 일자별 게시글 작성건수 ] <<<");
+		System.out.println("-----------------------------------------------");
+		System.out.println(" 작성일자\t작성건수");
+		System.out.println("-----------------------------------------------");
+		
+		List<Map<String, String>> list = bdao.monthcnt();
+		
+		if (list.size() > 0) {
+			StringBuilder sb = new StringBuilder();
+			
+			for (int i=0; i<list.size(); i++) {
+				sb.append(list.get(i).get("WRITEDAY") + " ");
+				sb.append(list.get(i).get("cnt") + "\n");
+			}
+			System.out.println(sb.toString());
+										
+		} else {
+			System.out.println(" 작성된 게시글이 없습니다 ");
+		}
+
+	}
+
+	private void weekcnt() {
+
+		System.out.println("------------------[최근 1주일간 일자별 게시글 작성건수]---------------------");
+
+		String result = "전체\t";
+		for (int i=0; i<7; i++) {
+			result += MyUtil.getDay(i - 6) + "\t";
+		}
+		
+		System.out.println(result);
+		
+		Map<String, Integer> resultMap = bdao.weekcnt();
+		System.out.println(resultMap.get("total") + "\t" + resultMap.get("previous6") + "\t" + resultMap.get("previous5") + "\t" 
+				+ resultMap.get("previous4") + "\t" + resultMap.get("previous3") + "\t" + resultMap.get("previous2") + "\t"
+				+ resultMap.get("previous1") + "\t" + resultMap.get("today"));
+		System.out.println("------------------------------------------------------------------------");
+	}
+	private int deleteBoard(MemberDTO loginMember, Scanner sc) {
+		int result = 0;
+
+		System.out.println("\n>>> 글 삭제 하기 <<<");
+		
+		System.out.println("> 삭제할 글번호 : ");
+		String boardNo = sc.nextLine();
+	
+		Map<String, String> paraMap =new HashMap<String, String>();
+		paraMap.put("boardNo", boardNo);
+		
+		BoardDTO bdto = bdao.viewContents(paraMap);
+		if (bdto != null) {
+			if (bdto.getFk_userid().equals(loginMember.getUserid())) {
+				System.out.println("> 글암호 : ");
+				String boardPasswd = sc.nextLine();
+
+				paraMap.put("boardPasswd", boardPasswd);
+				
+				bdto = bdao.viewContents(paraMap);
+				
+				System.out.println("글제목 : " + bdto.getSubject());
+				System.out.println("글내용 : " + bdto.getContents());
+				
+				Connection conn = MyDBConnection.getConn();
+				int n = bdao.deleteBoard(paraMap);
+				if (n == 1) {
+					do {
+						
+						System.out.print(">정말로 삭제하시겠습니까?[Y/N] :");
+						String yn = sc.nextLine();
+						try {
+							if("y".equalsIgnoreCase(yn)) {
+								System.out.println("삭제 성공");
+								conn.commit();
+								break;
+							} else if("n".equalsIgnoreCase(yn)) {
+								System.out.println("삭제 포기");
+								conn.rollback();
+								break;
+							} else {
+								System.out.println("> Y 또는 N만 입력하세요!! ");
+							}
+						} catch (SQLException e) {
+							e.printStackTrace();
+							break;
+						}
+						
+					}while (true);
+				} else {
+					System.out.println("해당 글번호가 존재하지 않습니다");
+				}
+				
+			} 
+		} else {
+			System.out.println("해당 글번호가 존재하지 않습니다!");
+		}
+
+		
+		return 0;
+	}
+
 	private int updateBoard(MemberDTO loginMember, Scanner sc) {
 		
 		int result = 0;
@@ -237,8 +348,35 @@ public class TotalController {
 					
 					int n = bdao.updateBoard(paraMap);
 					if (n == 1) {
-						result = 5;
+						Connection conn = MyDBConnection.getConn();
+						do {
+							
+							System.out.print(">정말로 수정하시겠습니까?[Y/N] :");
+							String yn = sc.nextLine();
+							try {
+								if("y".equalsIgnoreCase(yn)) {
+									conn.commit();
+									result = 5;
+									break;
+								} else if("n".equalsIgnoreCase(yn)) {
+									conn.rollback();
+									result = 4;
+									break;
+								} else {
+									System.out.println("> Y 또는 N만 입력하세요!! ");
+								}
+							} catch (SQLException e) {
+								e.printStackTrace();
+								break;
+							}
+							
+						}while (true);
+						
+					} else {
+						result = 3;
 					}
+					
+					
 				} else {
 					result = 2;
 				}

@@ -247,7 +247,6 @@ public class BoardDAO implements InterBoardDAO {
 			ps.setString(3, paraMap.get("boardNo"));
 
 			ps.executeUpdate();
-			conn.commit();
 			result = 1;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -256,4 +255,101 @@ public class BoardDAO implements InterBoardDAO {
 		}	
 		return result;
 	}
+
+	@Override
+	public int deleteBoard(Map<String, String> paraMap) {
+		int result = 0;
+		try {
+			conn = MyDBConnection.getConn();
+			
+			String sql = " delete from jdbc_board where boardno = ? ";
+			ps = conn.prepareStatement(sql);
+			ps.setString(1, paraMap.get("boardNo"));
+
+			ps.executeUpdate();
+			result = 1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close();
+		}	
+		return result;
+	}
+
+	@Override
+	public Map<String, Integer> weekcnt() {
+
+		Map<String, Integer> resultMap = new HashMap<>();
+		try {
+			conn = MyDBConnection.getConn();
+			
+			String sql = "select count(*) as total\n"+
+					"    ,sum(decode(func_midnight(sysdate) - func_midnight(writeday), 6, 1, 0))as previous6\n"+
+					"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 5, 1, 0)) as previous5\n"+
+					"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 4, 1, 0)) as previous4\n"+
+					"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 3, 1, 0)) as previous3\n"+
+					"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 2, 1, 0)) as previous2\n"+
+					"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 1, 1, 0)) as previous1\n"+
+					"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 0, 1, 0)) as today\n"+
+					"from jdbc_board\n"+
+					"where func_midnight(sysdate) - func_midnight(writeday) < 7";
+			
+			ps = conn.prepareStatement(sql);
+			
+			rs = ps.executeQuery();
+			
+			rs.next();
+			
+			resultMap.put("total", rs.getInt(1));
+			resultMap.put("previous6", rs.getInt(2));
+			resultMap.put("previous5", rs.getInt(3));
+			resultMap.put("previous4", rs.getInt(4));
+			resultMap.put("previous3", rs.getInt(5));
+			resultMap.put("previous2", rs.getInt(6));
+			resultMap.put("previous1", rs.getInt(7));
+			resultMap.put("today", rs.getInt(8));
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			close();
+		}
+		return resultMap;
+	}
+
+	@Override
+	public List<Map<String, String>> monthcnt() {
+
+		List<Map<String, String>> mapList = new ArrayList<>();
+		
+		try {
+			conn = MyDBConnection.getConn();
+			
+			String sql = "select decode(grouping(to_char(writeday, 'yyyy-mm-dd')), 0, to_char(writeday, 'yyyy-mm-dd'), '전체' ) as WRITEDAY\n"+
+					"   , count(*) as cnt\n"+
+					"from jdbc_board\n"+
+					"where to_char(writeday, 'yyyy-mm') = to_char(sysdate, 'yyyy-mm')\n"+
+					"group by rollup(to_char(writeday, 'yyyy-mm-dd'))";
+			
+			ps = conn.prepareStatement(sql);
+			
+			rs = ps.executeQuery();
+			
+			while (rs.next()) {
+				
+				Map<String, String> map = new HashMap<>();
+				
+				map.put("WRITEDAY", rs.getString(1));
+				map.put("cnt", String.valueOf(rs.getString(2)));
+				mapList.add(map);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			close();
+		}
+		return mapList;
+	}
+		
 }

@@ -19,6 +19,9 @@ public interface InterBoardDAO {
 	
 	int updateBoard(Map<String, String> paraMap);
 
+	int deleteBoard(Map<String, String> paraMap);
 
-
+	Map<String, Integer> weekcnt();
+	
+	List<Map<String, String>> monthcnt();
 }

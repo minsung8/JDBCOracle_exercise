@@ -128,4 +128,68 @@ String sql = "select C.contents, M.name, to_char(C.writeday, 'yyyy-mm-dd hh24:mi
 "where C.fk_boardno = 1";
 
 select * from jdbc_board
-where boardno = 7;
+order by boardno desc;
+
+update jdbc_board set writeday = writeday - 1
+where boardno = 15;
+
+update jdbc_board set writeday = writeday - 3
+where boardno in (14, 13);
+
+update jdbc_board set writeday = writeday - 10
+where boardno = 12;
+
+
+
+select boardno as 게시글번호
+    , to_char(writeday, 'yyyy-mm-dd hh24:mi:ss') as 작성일자시분초
+    ,to_char(to_date( to_char(writeday, 'yyyy-mm-dd'), 'yyyy-mm-dd'), 'yyyy-mm-dd hh24:mi:ss') as 작성일자자정
+from jdbc_board
+order by boardno desc;
+
+create or replace function func_midnight
+(p_date in date)
+return date
+is
+begin
+   return to_date( to_char(p_date, 'yyyy-mm-dd'), 'yyyy-mm-dd');
+end func_midnight;
+    
+select boardno as 게시글번호 
+    , to_char(writeday, 'yyyy-mm-dd hh24:mi:ss') as 작성일자시분초
+    ,to_char(func_midnight(writeday), 'yyyy-mm-dd hh24:mi:ss' ) as 작성일자자정
+from jdbc_board
+order by boardno desc;
+
+commit;
+
+select text
+from user_source
+where type = 'function' and name = 'func_midnight';
+
+select boardno as 게시글번호 
+    , to_char(writeday, 'yyyy-mm-dd hh24:mi:ss') as 작성일자시분초
+    , to_char(func_midnight(writeday), 'yyyy-mm-dd hh24:mi:ss' ) as 작성일자자정
+    , sysdate - writeday
+    , func_midnight(sysdate) - func_midnight(writeday)
+from jdbc_board
+order by boardno desc;
+
+String sql = "select count(*) as total\n"+
+"    ,sum(decode(func_midnight(sysdate) - func_midnight(writeday), 6, 1, 0))as previous6\n"+
+"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 5, 1, 0)) as previous5\n"+
+"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 4, 1, 0)) as previous4\n"+
+"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 3, 1, 0)) as previous3\n"+
+"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 2, 1, 0)) as previous2\n"+
+"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 1, 1, 0)) as previous1\n"+
+"    , sum(decode(func_midnight(sysdate) - func_midnight(writeday), 0, 1, 0)) as today\n"+
+"from jdbc_board\n"+
+"where func_midnight(sysdate) - func_midnight(writeday) < 7";
+
+select * from jdbc_board
+where to_char(writeday, 'yyyy-mm') = to_char(sysdate, 'yyyy-mm')
+
+update jdbc_board set writeday = add_months(writeday, -1)
+where boardno = 12
+
+    
